@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mitra10 Delivery Calculator</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #2c3e50;
+      --secondary: #3498db;
+      --accent: #e74c3c;
+      --light: #ecf0f1;
+      --dark: #2c3e50;
+      --success: #27ae60;
+      --warning: #f39c12;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --radius: 12px;
+      --transition: all 0.3s ease;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f5f7fa;
+      color: var(--dark);
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    
+    .subtitle {
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+    
+    .card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 25px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .card-title {
+      font-size: 1.4rem;
+      margin-bottom: 15px;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .card-title i {
+      color: var(--accent);
+    }
+    
+    #map {
+      height: 350px;
+      width: 100%;
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--primary);
+    }
+    
+    input, button {
+      width: 100%;
+      padding: 12px 15px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem;
+      transition: var(--transition);
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: var(--secondary);
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    }
+    
+    input[readonly] {
+      background-color: #f8f9fa;
+      cursor: not-allowed;
+    }
+    
+    .input-icon {
+      position: relative;
+    }
+    
+    .input-icon i {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #7f8c8d;
+    }
+    
+    button {
+      background: linear-gradient(135deg, var(--secondary), var(--primary));
+      color: white;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 15px;
+    }
+    
+    button:hover {
+      background: linear-gradient(135deg, #2980b9, #34495e);
+      transform: translateY(-2px);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    #suggestions {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 5px;
+      display: none;
+    }
+    
+    #suggestions div {
+      padding: 10px 15px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    #suggestions div:hover {
+      background-color: #f8f9fa;
+    }
+    
+    #output {
+      background-color: #f8f9fa;
+      padding: 20px;
+      border-radius: var(--radius);
+      margin-top: 20px;
+      display: none;
+    }
+    
+    .result-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed #ddd;
+    }
+    
+    .result-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    
+    .result-label {
+      font-weight: 500;
+      color: var(--primary);
+    }
+    
+    .result-value {
+      font-weight: 600;
+      color: var(--accent);
+    }
+    
+    .copy-container {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .copy-container input {
+      flex: 1;
+    }
+    
+    .copy-btn {
+      width: auto;
+      padding: 0 15px;
+      background: var(--success);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .copy-btn:hover {
+      background: #219653;
+    }
+    
+    .copy-btn.copied {
+      background: var(--success);
+    }
+    
+    /* .copy-btn.copied::after {
+      content: "✓";
+      margin-left: 5px;
+    } */
+    
+    .leaflet-routing-container {
+      display: none;
+    }
+    
+    .marker-origin {
+      background-color: var(--success);
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      border: 3px solid white;
+      box-shadow: 0 0 5px rgba(0,0,0,0.3);
+    }
+    
+    .marker-dest {
+      background-color: var(--accent);
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      border: 3px solid white;
+      box-shadow: 0 0 5px rgba(0,0,0,0.3);
+    }
+    
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      padding: 20px;
+      color: #7f8c8d;
+      font-size: 0.9rem;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+      }
+      
+      header {
+        padding: 15px;
+      }
+      
+      h1 {
+        font-size: 1.8rem;
+      }
+      
+      .card {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1><i class="fas fa-truck"></i> Mitra10 Delivery Calculator</h1>
+      <p class="subtitle">Hitung biaya pengiriman dari Mitra10 Cibubur ke lokasi Anda</p>
+    </header>
+    
+    <div class="card">
+      <div class="card-title"><i class="fas fa-map-marked-alt"></i> Peta Lokasi</div>
+      <div id="map"></div>
+    </div>
+    
+    <div class="card">
+      <div class="card-title"><i class="fas fa-location-dot"></i> Lokasi Asal</div>
+      
+      <div class="form-group">
+        <label for="originLatLon">Koordinat:</label>
+        <div class="input-icon">
+          <input type="text" id="originLatLon" readonly>
+          <i class="fas fa-map-pin"></i>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="originAddress">Alamat Mitra10 Cibubur:</label>
+        <div class="input-icon">
+          <input type="text" id="originAddress" readonly>
+          <i class="fas fa-store"></i>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-title"><i class="fas fa-flag-checkered"></i> Lokasi Tujuan</div>
+      
+    <div class="form-group">
+      <label for="destinationLatLon">Koordinat Tujuan:</label>
+      <div class="copy-container">
+        <div class="input-icon" style="flex: 1;">
+          <input type="text" id="destinationLatLon" readonly>
+          <i class="fas fa-map-location-dot"></i>
+        </div>
+        <button class="copy-btn" id="copyBtn"><i class="far fa-copy"></i></button>
+      </div>
+    </div>
+
+      
+      <div class="form-group">
+        <label for="destination">Cari Alamat Tujuan:</label>
+        <div class="input-icon">
+          <input type="text" id="destination" placeholder="Masukkan alamat lengkap tujuan...">
+          <i class="fas fa-search-location"></i>
+        </div>
+        <div id="suggestions"></div>
+      </div>
+      
+    <button id="hitungJarakButton" onclick="hitungJarak()">
+      <i class="fas fa-calculator"></i> Hitung Biaya Pengiriman
+    </button>
+
+      
+      <div id="output">
+        <div class="result-item">
+          <span class="result-label">Jarak Tempuh:</span>
+          <span class="result-value" id="distanceResult">-</span>
+        </div>
+        <div class="result-item">
+          <span class="result-label">Biaya Per KM:</span>
+          <span class="result-value">Rp 5,000</span>
+        </div>
+        <div class="result-item">
+          <span class="result-label">Total Biaya:</span>
+          <span class="result-value" id="costResult">-</span>
+        </div>
+      </div>
+    </div>
+    
+    <footer>
+      <p>© 2023 Mitra10 Delivery Calculator | Powered by OpenStreetMap</p>
+    </footer>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // Konfigurasi awal
+    const originLat = -6.3815189746102545;
+    const originLon = 106.93100764979508;
+    const biayaPerKM = 5000;
+    document.getElementById('originLatLon').value = `${originLat}, ${originLon}`;
+
+    // Inisialisasi peta dengan tampilan yang lebih menarik
+    var map = L.map('map').setView([originLat, originLon], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Batas peta Indonesia
+    var southWest = L.latLng(-11.0, 94.0);
+    var northEast = L.latLng(6.1, 141.0);
+    var bounds = L.latLngBounds(southWest, northEast);
+    map.setMaxBounds(bounds);
+    map.on('drag', function() { map.panInsideBounds(bounds, { animate: false }); });
+
+    // Marker asal dengan ikon kustom
+    var markerOrigin = L.marker([originLat, originLon], {
+      icon: L.divIcon({className: 'marker-origin'})
+    }).addTo(map).bindPopup('<b>Mitra10 Cibubur</b><br>Lokasi asal pengiriman').openPopup();
+    
+    var markerDest;
+
+    // Ambil alamat asal dari Nominatim
+    async function tampilkanAlamatAsal() {
+      try {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${originLat}&lon=${originLon}&zoom=18&addressdetails=1&accept-language=id`;
+        const res = await fetch(url);
+        const data = await res.json();
+        document.getElementById('originAddress').value = data.display_name || 'Alamat tidak ditemukan';
+      } catch (error) {
+        console.error('Error fetching origin address:', error);
+        document.getElementById('originAddress').value = 'Mitra10 Cibubur, Jl. Alternatif Cibubur, Kota Bekasi';
+      }
+    }
+    tampilkanAlamatAsal();
+
+    // Autocomplete untuk alamat tujuan
+    const destInput = document.getElementById('destination');
+    const suggestionsBox = document.getElementById('suggestions');
+    const destLatLonInput = document.getElementById('destinationLatLon');
+    const copyBtn = document.getElementById('copyBtn');
+    const outputDiv = document.getElementById('output');
+
+    let debounceTimer;
+    destInput.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      if (destInput.value.length >= 3) {
+        debounceTimer = setTimeout(fetchSuggestions, 800);
+      } else {
+        suggestionsBox.style.display = 'none';
+      }
+    });
+
+    // Fungsi untuk mendapatkan saran alamat
+    async function fetchSuggestions() {
+      const query = destInput.value;
+      if (query.length < 3) {
+        suggestionsBox.style.display = 'none';
+        return;
+      }
+
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=ID&limit=5&addressdetails=1&accept-language=id`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        suggestionsBox.innerHTML = '';
+        if (data.length === 0) {
+          const div = document.createElement('div');
+          div.textContent = 'Tidak ditemukan hasil';
+          suggestionsBox.appendChild(div);
+        } else {
+          data.forEach(place => {
+            const name = place.display_name;
+            const div = document.createElement('div');
+            div.textContent = name.length > 60 ? name.substring(0, 60) + '...' : name;
+            div.title = name;
+            div.onclick = () => {
+              destInput.value = name;
+              const lat = parseFloat(place.lat).toPrecision(17);
+              const lon = parseFloat(place.lon).toPrecision(17);
+              destLatLonInput.value = `${lat}, ${lon}`;
+              destInput.setAttribute('data-lat', lat);
+              destInput.setAttribute('data-lon', lon);
+              suggestionsBox.style.display = 'none';
+              
+              // Tampilkan tombol copy
+              copyBtn.style.display = 'flex';
+              
+              // Tambahkan marker tujuan
+              updateDestinationMarker(lat, lon);
+            };
+            suggestionsBox.appendChild(div);
+          });
+        }
+        suggestionsBox.style.display = 'block';
+      } catch (error) {
+        console.error('Error fetching suggestions:', error);
+        suggestionsBox.style.display = 'none';
+      }
+    }
+
+    // Fungsi untuk menyalin koordinat
+    copyBtn.addEventListener('click', () => {
+      destLatLonInput.select();
+      document.execCommand('copy');
+      copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+      copyBtn.classList.add('copied');
+      setTimeout(() => {
+        copyBtn.innerHTML = '<i class="far fa-copy"></i>';
+        copyBtn.classList.remove('copied');
+      }, 2000);
+    });
+
+    // Fungsi untuk memperbarui marker tujuan
+    function updateDestinationMarker(lat, lon) {
+      if (markerDest) map.removeLayer(markerDest);
+      markerDest = L.marker([lat, lon], {
+        icon: L.divIcon({className: 'marker-dest'})
+      }).addTo(map).bindPopup('<b>Lokasi Tujuan</b>').openPopup();
+      
+      // Sesuaikan view peta
+      map.fitBounds([
+        [originLat, originLon],
+        [lat, lon]
+      ], { padding: [50, 50] });
+    }
+
+    // Fungsi utama untuk menghitung jarak
+    async function hitungJarak() {
+      const destLat = destInput.getAttribute('data-lat');
+      const destLon = destInput.getAttribute('data-lon');
+
+      if (!destLat || !destLon) {
+        showError('Mohon pilih alamat tujuan dari saran yang tersedia');
+        return;
+      }
+
+      try {
+        // Tampilkan loading state
+        const button = document.querySelector('#hitungJarakButton');
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghitung...';
+        button.disabled = true;
+        
+        // Hitung jarak menggunakan OSRM
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${originLon},${originLat};${destLon},${destLat}?overview=false`;
+        const osrmRes = await fetch(osrmUrl);
+        const osrmData = await osrmRes.json();
+
+        if (osrmData.code !== 'Ok') {
+          showError('Gagal menghitung rute. Pastikan alamat tujuan valid.');
+          return;
+        }
+
+        const distanceInMeters = osrmData.routes[0].distance;
+        const distanceInKM = distanceInMeters / 1000;
+        
+        // Pembulatan sesuai aturan
+        const decimalPart = distanceInKM - Math.floor(distanceInKM);
+        let pembulatan;
+        
+        if (decimalPart < 0.5) {
+          pembulatan = Math.floor(distanceInKM);
+        } else if (decimalPart > 0.5) {
+          pembulatan = Math.ceil(distanceInKM);
+        } else {
+          pembulatan = distanceInKM;
+        }
+
+        const totalBiaya = pembulatan * biayaPerKM;
+        
+        // Tampilkan hasil
+        document.getElementById('distanceResult').textContent = 
+          `${distanceInKM.toFixed(2)} KM` + 
+          (pembulatan !== distanceInKM ? ` → dibulatkan ${pembulatan} KM` : '');
+        
+        document.getElementById('costResult').textContent = 
+          `Rp ${totalBiaya.toLocaleString('id-ID')}`;
+        
+        outputDiv.style.display = 'block';
+        
+      } catch (error) {
+        console.error('Error calculating distance:', error);
+        showError('Terjadi kesalahan saat menghitung jarak. Silakan coba lagi.');
+      } finally {
+        // Kembalikan button ke state semula
+        const button = document.querySelector('#hitungJarakButton');
+        button.innerHTML = '<i class="fas fa-calculator"></i> Hitung Biaya Pengiriman';
+        button.disabled = false;
+      }
+    }
+
+
+    // Fungsi untuk menampilkan pesan error
+    function showError(message) {
+      outputDiv.style.display = 'block';
+      outputDiv.innerHTML = `<div style="color: var(--accent); text-align: center; padding: 10px;">
+        <i class="fas fa-exclamation-circle"></i> ${message}
+      </div>`;
+    }
+
+    destInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        fetchSuggestions();
+      }
+    });
+
+
+    // Sembunyikan suggestions ketika klik di luar
+    document.addEventListener('click', (e) => {
+      if (e.target !== destInput) {
+        suggestionsBox.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
