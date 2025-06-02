@@ -61,6 +61,25 @@
       opacity: 0.9;
     }
     
+    /* Styling tombol reset khusus */
+    .reset-all {
+      text-align: right; /* tombol reset di kanan */
+      margin-top: 5px;
+    }
+
+    #resetButton {
+      display: none;
+      background: none;  /* nggak ada background */
+      border: none;      /* nggak ada border */
+      color: #ff0000;    /* teks merah */
+      cursor: pointer;
+      font-size: 16px;
+      padding: 5px;
+      font-weight: normal;
+      display: inline;   /* selebar teksnya aja */
+      width: auto;       /* biar nggak selebar container */
+    }
+
     .card {
       background: white;
       border-radius: var(--radius);
@@ -153,6 +172,8 @@
       padding: 15px;
     }
     
+
+
     button:hover {
       background: linear-gradient(135deg, #2980b9, #34495e);
       transform: translateY(-2px);
@@ -296,8 +317,8 @@
 <body>
   <div class="container">
     <header>
-      <h1><i class="fas fa-truck"></i> Mitra10 Delivery Calculator</h1>
-      <p class="subtitle">Hitung biaya pengiriman dari Mitra10 Cibubur ke lokasi Anda</p>
+      <h1><i class="fas fa-truck"></i> Delivery Calculator</h1>
+      <p class="subtitle">Hitung biaya pengiriman dari Toko ke lokasi Anda</p>
     </header>
     
     <div class="card">
@@ -317,7 +338,7 @@
       </div>
       
       <div class="form-group">
-        <label for="originAddress">Alamat Mitra10 Cibubur:</label>
+        <label for="originAddress">Alamat Store:</label>
         <div class="input-icon">
           <input type="text" id="originAddress" readonly>
           <i class="fas fa-store"></i>
@@ -326,7 +347,8 @@
     </div>
     
     <div class="card">
-      <div class="card-title"><i class="fas fa-flag-checkered"></i> Lokasi Tujuan</div>
+      <div class="card-title"><i class="fas fa-flag-checkered"></i> Lokasi Tujuan
+      </div>   
       
     <div class="form-group">
       <label for="destinationLatLon">Koordinat Tujuan:</label>
@@ -339,7 +361,6 @@
       </div>
     </div>
 
-      
       <div class="form-group">
         <label for="destination">Cari Alamat Tujuan:</label>
         <div class="input-icon">
@@ -352,8 +373,11 @@
     <button id="hitungJarakButton" onclick="hitungJarak()">
       <i class="fas fa-calculator"></i> Hitung Biaya Pengiriman
     </button>
-
       
+    <div class="reset-all">
+      <button id="resetButton">Reset All</button>
+    </div>
+
       <div id="output">
         <div class="result-item">
           <span class="result-label">Jarak Tempuh:</span>
@@ -377,6 +401,14 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
+
+    if (markerDest) {
+      document.getElementById('resetButton').style.display = 'inline';
+    } else {
+      document.getElementById('resetButton').style.display = 'none';
+    }
+
+
     // Konfigurasi awal
     const originLat = -6.3815189746102545;
     const originLon = 106.93100764979508;
@@ -510,6 +542,35 @@
       ], { padding: [50, 50] });
     }
 
+    // Reset Btn
+    resetButton.addEventListener('click', () => {
+      // Bersihkan input alamat tujuan
+      
+      destLatLonInput.value = '';
+      destInput.value = '';
+      markerDest.value = '';
+      
+      // Hapus data lat/lon (kalau disimpan di atribut data)
+      destLatLonInput.removeAttribute('data-lat');
+      destLatLonInput.removeAttribute('data-lon');
+      
+      // Hapus hasil jarak & biaya
+      document.getElementById('distanceResult').textContent = '';
+      document.getElementById('costResult').textContent = '';
+      
+      // Sembunyikan output
+      outputDiv.style.display = 'none';
+
+      // Hapus marker tujuan dari peta
+      if (markerDest) {
+        map.removeLayer(markerDest);
+        markerDest = null;
+      }
+
+      // Sembunyikan tombol reset setelah marker dihapus
+      document.getElementById('resetButton').style.display = 'none';
+    });
+
     // Fungsi utama untuk menghitung jarak
     async function hitungJarak() {
       const destLat = destInput.getAttribute('data-lat');
@@ -563,6 +624,9 @@
         
         outputDiv.style.display = 'block';
         
+        // Tampilkan tombol reset hanya setelah perhitungan berhasil
+        document.getElementById('resetButton').style.display = 'inline';
+
       } catch (error) {
         console.error('Error calculating distance:', error);
         showError('Terjadi kesalahan saat menghitung jarak. Silakan coba lagi.');
