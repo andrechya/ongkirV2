@@ -315,6 +315,9 @@
   </style>
 </head>
 <body>
+      <h1>Jarak: {{ jarak }} km</h1>
+    <img src="https://maps.googleapis.com/maps/api/staticmap?center={{ lat1 }},{{ lon1 }}&zoom=10&size=600x300&maptype=roadmap&markers=color:red|{{ lat1 }},{{ lon1 }}|{{ lat2 }},{{ lon2 }}" alt="Peta">
+    <a href="/">Kembali</a>
   <div class="container">
     <header>
       <h1><i class="fas fa-truck"></i> Delivery Calculator</h1>
